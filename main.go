@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/sinmetal/spshovel/spanner"
 )
@@ -33,7 +32,6 @@ func main() {
 	if err != nil {
 		fmt.Printf("failed get working dir. err=%+v\n", err)
 	}
-	fmt.Println(wd)
 
 	sql, err := ReadSQL(param.SqlFilePath)
 	if err != nil {
@@ -69,13 +67,6 @@ func getFlag() (*Param, error) {
 		noHeader    = flag.Bool("no-header", false, "csv header not output")
 	)
 	flag.Parse()
-
-	ex, err := os.Executable()
-	if err != nil {
-		panic(err)
-	}
-	exPath := filepath.Dir(ex)
-	fmt.Println(exPath)
 
 	var emsg string
 	if len(*project) < 1 {
