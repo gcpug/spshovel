@@ -1,0 +1,1 @@
+SELECT * From Tweet Limit 10
