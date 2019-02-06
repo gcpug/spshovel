@@ -16,6 +16,7 @@ type Param struct {
 	Instance    string
 	Database    string
 	SqlFilePath string
+	NoHeader    bool
 }
 
 func main() {
@@ -40,6 +41,7 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Println(sql)
+	fmt.Println()
 
 	ctx := context.Background()
 	sc := spanner.NewClient(ctx, db)
@@ -49,13 +51,11 @@ func main() {
 		fmt.Printf("failed query to spanner. err=%+v\n", err)
 	}
 
-	var records [][]string
-	records = append(records, cn)
-	for _, v := range data {
-		records = append(records, v)
+	if !param.NoHeader {
+		data, data[0] = append(data[0:1], data[0:]...), cn
 	}
 
-	if err := Write(wd, records); err != nil {
+	if err := Write(wd, data); err != nil {
 		fmt.Printf("failed write file. err=%+v\n", err)
 	}
 }
@@ -66,6 +66,7 @@ func getFlag() (*Param, error) {
 		instance    = flag.String("instance", "", "instance is spanner insntace")
 		database    = flag.String("database", "", "database is spanner database")
 		sqlFilePath = flag.String("sql-file-path", "", "sql-file-path is sql file path")
+		noHeader    = flag.Bool("no-header", false, "csv header not output")
 	)
 	flag.Parse()
 
@@ -99,5 +100,6 @@ func getFlag() (*Param, error) {
 		Instance:    *instance,
 		Database:    *database,
 		SqlFilePath: *sqlFilePath,
+		NoHeader:    *noHeader,
 	}, nil
 }
