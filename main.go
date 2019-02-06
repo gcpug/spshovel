@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/sinmetal/spshovel/spanner"
+	"github.com/gcpug/spshovel/spanner"
 )
 
 type Param struct {

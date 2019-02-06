@@ -1,5 +1,7 @@
 # spshovel
-Spanner Client Tool
+
+Spanner Power shovel is a tool to output Spanner's Query result as CSV.
+It helps to output huge Query results from Spanner.
 
 ## Output Query Results as CSV
 

@@ -1,4 +1,4 @@
-module github.com/sinmetal/spshovel
+module github.com/gcpug/spshovel
 
 require (
 	cloud.google.com/go v0.35.1
