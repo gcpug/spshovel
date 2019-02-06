@@ -53,9 +53,11 @@ func main() {
 		data, data[0] = append(data[0:1], data[0:]...), cn
 	}
 
-	if err := Write(wd, data); err != nil {
+	fn, err := Write(wd, data)
+	if err != nil {
 		fmt.Printf("failed write file. err=%+v\n", err)
 	}
+	fmt.Printf("output %s !", fn)
 }
 
 func getFlag() (*Param, error) {

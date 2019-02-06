@@ -22,18 +22,19 @@ func ReadSQL(path string) (string, error) {
 	return string(sql), nil
 }
 
-func Write(path string, records [][]string) error {
-	f, err := os.Create(fmt.Sprintf("%s/%s.csv", path, time.Now().Format("20060102150405")))
+func Write(path string, records [][]string) (string, error) {
+	fn := fmt.Sprintf("%s/%s.csv", path, time.Now().Format("20060102150405"))
+	f, err := os.Create(fn)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer f.Close()
 
 	w := csv.NewWriter(f)
 	if err := w.WriteAll(records); err != nil {
-		return err
+		return "", err
 	}
 	w.Flush()
 
-	return nil
+	return fn, nil
 }
