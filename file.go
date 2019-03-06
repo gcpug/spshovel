@@ -2,24 +2,33 @@ package main
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"os"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
-func ReadSQL(path string) (string, error) {
+func ReadSQL(path string) (sql string, rerr error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return "", err
+		return "", errors.WithStack(err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			if rerr == nil {
+				rerr = errors.WithStack(err)
+				return
+			}
+			fmt.Printf("failed file.Close() err=%+v\n", err)
+		}
+	}()
 
-	sql, err := ioutil.ReadAll(f)
+	body, err := ioutil.ReadAll(f)
 	if err != nil {
-		return "", err
+		return "", errors.WithStack(err)
 	}
-	return string(sql), nil
+	return string(body), nil
 }
 
 func NewCSVFile(path string) (string, *os.File, error) {
