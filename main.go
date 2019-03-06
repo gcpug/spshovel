@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"os"
 
 	"github.com/gcpug/spshovel/spanner"
+	"github.com/pkg/errors"
 )
 
 type Param struct {
@@ -42,22 +42,35 @@ func main() {
 	fmt.Println()
 
 	ctx := context.Background()
+	fn, err := run(ctx, param, db, sql, wd)
+	if err != nil {
+		fmt.Printf("+%v\n", err)
+		os.Exit(1)
+	}
+	fmt.Printf("output %s", fn)
+}
+
+func run(ctx context.Context, param *Param, db string, sql string, output string) (fileName string, rerr error) {
 	sc := spanner.NewClient(ctx, db)
 	s := spanner.NewSpannerEntityService(sc)
-	cn, data, err := s.Query(ctx, sql)
+	fn, f, err := NewCSVFile(output)
 	if err != nil {
-		fmt.Printf("failed query to spanner. err=%+v\n", err)
+		return "", errors.WithStack(err)
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			if rerr == nil {
+				rerr = errors.WithStack(err)
+				return
+			}
+			fmt.Printf("failed file.Close() err=%+v\n", err)
+		}
+	}()
+	if err := s.QueryToWrite(ctx, sql, !param.NoHeader, f); err != nil {
+		return "", errors.WithMessage(err, "failed query to spanner with output file.")
 	}
 
-	if !param.NoHeader {
-		data, data[0] = append(data[0:1], data[0:]...), cn
-	}
-
-	fn, err := Write(wd, data)
-	if err != nil {
-		fmt.Printf("failed write file. err=%+v\n", err)
-	}
-	fmt.Printf("output %s !", fn)
+	return fn, nil
 }
 
 func getFlag() (*Param, error) {

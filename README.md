@@ -11,7 +11,7 @@ It helps to output huge Query results from Spanner.
 go run *.go -project=gcpug-public-spanner \
   -instance=merpay-sponsored-instance \
   -database=sinmetal \
-  -sql-file-path=/Users/sinmetal/go/src/github.com/sinmetal/spshovel/example.sql
+  -sql-file-path=/Users/sinmetal/go/src/github.com/gcpug/spshovel/example.sql
 ```
 
 #### Do not output headers to CSV
@@ -20,6 +20,6 @@ go run *.go -project=gcpug-public-spanner \
 go run *.go -project=gcpug-public-spanner \
   -instance=merpay-sponsored-instance \
   -database=sinmetal \
-  -sql-file-path=/Users/sinmetal/go/src/github.com/sinmetal/spshovel/example.sql\
+  -sql-file-path=/Users/sinmetal/go/src/github.com/gcpug/spshovel/example.sql\
   --no-header=true
 ```

@@ -1,1 +1,1 @@
-SELECT * From Tweet Limit 10
+SELECT OrderId, OrderDetailId, ItemId, Price, CommitedAt From OrderDetail1M

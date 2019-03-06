@@ -2,10 +2,12 @@ package spanner
 
 import (
 	"context"
+	"encoding/csv"
+	"io"
 
 	"cloud.google.com/go/spanner"
+	"github.com/gcpug/hake"
 	"github.com/pkg/errors"
-	"github.com/sinmetal/hake"
 	"google.golang.org/api/iterator"
 )
 
@@ -17,11 +19,13 @@ func NewSpannerEntityService(sc *spanner.Client) *SpannerEntityService {
 	return &SpannerEntityService{sc}
 }
 
-func (s *SpannerEntityService) Query(ctx context.Context, sql string) ([]string, [][]string, error) {
+func (s *SpannerEntityService) QueryToWrite(ctx context.Context, sql string, header bool, w io.Writer) error {
 	q := spanner.NewStatement(sql)
 
-	var columnNames []string
-	var rows [][]string
+	cw := csv.NewWriter(w)
+	hw := hake.NewWriter(cw, header)
+
+	var count int
 	iter := s.sc.Single().Query(ctx, q)
 	for {
 		row, err := iter.Next()
@@ -29,18 +33,17 @@ func (s *SpannerEntityService) Query(ctx context.Context, sql string) ([]string,
 			break
 		}
 		if err != nil {
-			return nil, nil, err
+			return errors.WithStack(err)
 		}
-		if len(columnNames) < 1 {
-			columnNames = row.ColumnNames()
+		count++
+		if err := hw.Write(row); err != nil {
+			return errors.WithStack(err)
 		}
-
-		a, err := (*hake.Row)(row).ToStringArray()
-		if err != nil {
-			return nil, nil, errors.WithStack(err)
+		if count%1000 == 0 {
+			cw.Flush()
 		}
-		rows = append(rows, a)
 	}
+	cw.Flush()
 
-	return columnNames, rows, nil
+	return nil
 }
