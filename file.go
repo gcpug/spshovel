@@ -1,8 +1,8 @@
 package main
 
 import (
-	"encoding/csv"
 	"fmt"
+	"github.com/pkg/errors"
 	"io/ioutil"
 	"os"
 	"time"
@@ -22,19 +22,11 @@ func ReadSQL(path string) (string, error) {
 	return string(sql), nil
 }
 
-func Write(path string, records [][]string) (string, error) {
+func NewCSVFile(path string) (string, *os.File, error) {
 	fn := fmt.Sprintf("%s/%s.csv", path, time.Now().Format("20060102150405"))
 	f, err := os.Create(fn)
 	if err != nil {
-		return "", err
+		return "", nil, errors.WithStack(err)
 	}
-	defer f.Close()
-
-	w := csv.NewWriter(f)
-	if err := w.WriteAll(records); err != nil {
-		return "", err
-	}
-	w.Flush()
-
-	return fn, nil
+	return fn, f, nil
 }
