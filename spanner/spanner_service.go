@@ -27,6 +27,7 @@ func (s *SpannerEntityService) QueryToWrite(ctx context.Context, sql string, hea
 
 	var count int
 	iter := s.sc.Single().Query(ctx, q)
+	defer iter.Stop()
 	for {
 		row, err := iter.Next()
 		if err == iterator.Done {
