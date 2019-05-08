@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/csv"
 	"io"
+	"time"
 
 	"cloud.google.com/go/spanner"
 	"github.com/gcpug/hake"
@@ -26,7 +27,11 @@ func (s *SpannerEntityService) QueryToWrite(ctx context.Context, sql string, hea
 	hw := hake.NewWriter(cw, header)
 
 	var count int
-	iter := s.sc.Single().Query(ctx, q)
+	tx, err := s.sc.BatchReadOnlyTransaction(ctx, spanner.ReadTimestamp(time.Now()))
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	iter := tx.Query(ctx, q)
 	defer iter.Stop()
 	for {
 		row, err := iter.Next()
