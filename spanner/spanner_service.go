@@ -31,6 +31,8 @@ func (s *SpannerEntityService) QueryToWrite(ctx context.Context, sql string, hea
 	if err != nil {
 		return errors.WithStack(err)
 	}
+	defer tx.Close()
+
 	iter := tx.Query(ctx, q)
 	defer iter.Stop()
 	for {
@@ -50,6 +52,85 @@ func (s *SpannerEntityService) QueryToWrite(ctx context.Context, sql string, hea
 		}
 	}
 	cw.Flush()
+
+	return nil
+}
+
+type UpdateMutationer interface {
+	GetKey(row *spanner.Row) spanner.Key
+	GetMutation(row *spanner.Row) *spanner.Mutation
+}
+
+func (s *SpannerEntityService) UpdateExperiment(ctx context.Context, table string, columns []string, sql string, mutationer UpdateMutationer) (int, error) {
+	q := spanner.NewStatement(sql)
+
+	var rows []*spanner.Row
+
+	var count int
+	tx, err := s.sc.BatchReadOnlyTransaction(ctx, spanner.ReadTimestamp(time.Now()))
+	if err != nil {
+		return 0, errors.WithStack(err)
+	}
+	defer tx.Close()
+
+	iter := tx.Query(ctx, q)
+	defer iter.Stop()
+	for {
+		row, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return 0, errors.WithStack(err)
+		}
+		count++
+		rows = append(rows, row)
+
+		if count%500 == 0 {
+			if err := s.update(ctx, table, columns, rows, mutationer); err != nil {
+				return 0, errors.WithStack(err)
+			}
+			rows = []*spanner.Row{}
+		}
+	}
+	if len(rows) > 0 {
+		if err := s.update(ctx, table, columns, rows, mutationer); err != nil {
+			return 0, errors.WithStack(err)
+		}
+	}
+
+	return count, nil
+}
+
+func (s *SpannerEntityService) update(ctx context.Context, table string, columns []string, rows []*spanner.Row, mutationer UpdateMutationer) error {
+	var keys spanner.KeySet
+	for _, v := range rows {
+		key := mutationer.GetKey(v)
+		keys = append(key)
+	}
+
+	_, err := s.sc.ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
+		var ml []*spanner.Mutation
+
+		iter := txn.Read(ctx, table, keys, columns)
+		defer iter.Stop()
+		for {
+			row, err := iter.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			m := mutationer.GetMutation(row)
+			ml = append(ml, m)
+		}
+
+		return txn.BufferWrite(ml)
+	})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
