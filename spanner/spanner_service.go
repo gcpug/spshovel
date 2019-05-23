@@ -57,8 +57,8 @@ func (s *SpannerEntityService) QueryToWrite(ctx context.Context, sql string, hea
 }
 
 type UpdateMutationer interface {
-	GetKey(row *spanner.Row) spanner.Key
-	GetMutation(row *spanner.Row) *spanner.Mutation
+	GetKey(ctx context.Context, row *spanner.Row) spanner.Key
+	GetMutation(ctx context.Context, row *spanner.Row) *spanner.Mutation
 }
 
 func (s *SpannerEntityService) UpdateExperiment(ctx context.Context, table string, columns []string, sql string, mutationer UpdateMutationer) (int, error) {
@@ -105,7 +105,7 @@ func (s *SpannerEntityService) UpdateExperiment(ctx context.Context, table strin
 func (s *SpannerEntityService) update(ctx context.Context, table string, columns []string, rows []*spanner.Row, mutationer UpdateMutationer) error {
 	var keys spanner.KeySet
 	for _, v := range rows {
-		key := mutationer.GetKey(v)
+		key := mutationer.GetKey(ctx, v)
 		keys = append(key)
 	}
 
@@ -122,7 +122,7 @@ func (s *SpannerEntityService) update(ctx context.Context, table string, columns
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			m := mutationer.GetMutation(row)
+			m := mutationer.GetMutation(ctx, row)
 			ml = append(ml, m)
 		}
 

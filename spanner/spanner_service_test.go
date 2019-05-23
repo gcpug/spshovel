@@ -3,12 +3,12 @@ package spanner_test
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
 	"testing"
 	"time"
 
 	"cloud.google.com/go/spanner"
 	shovels "github.com/gcpug/spshovel/spanner"
+	"github.com/google/uuid"
 )
 
 type SampleMutationer struct{}
@@ -18,7 +18,7 @@ var _ shovels.UpdateMutationer = &SampleMutationer{}
 const TableName = "TweetHashKey"
 const PrimaryKeyName = "Id"
 
-func (m *SampleMutationer) GetKey(row *spanner.Row) spanner.Key {
+func (m *SampleMutationer) GetKey(ctx context.Context, row *spanner.Row) spanner.Key {
 	var id string
 	if err := row.ColumnByName(PrimaryKeyName, &id); err != nil {
 		panic(err)
@@ -26,7 +26,7 @@ func (m *SampleMutationer) GetKey(row *spanner.Row) spanner.Key {
 	return spanner.Key{id}
 }
 
-func (m *SampleMutationer) GetMutation(row *spanner.Row) *spanner.Mutation {
+func (m *SampleMutationer) GetMutation(ctx context.Context, row *spanner.Row) *spanner.Mutation {
 	var id string
 	if err := row.ColumnByName(PrimaryKeyName, &id); err != nil {
 		panic(err)
