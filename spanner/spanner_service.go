@@ -62,9 +62,7 @@ type UpdateMutationer interface {
 	GetMutation(ctx context.Context, row *spanner.Row) (*spanner.Mutation, error)
 }
 
-func (s *SpannerEntityService) UpdateExperiment(ctx context.Context, table string, columns []string, sql string, mutationer UpdateMutationer) (int, error) {
-	q := spanner.NewStatement(sql)
-
+func (s *SpannerEntityService) UpdateExperiment(ctx context.Context, table string, columns []string, statement spanner.Statement, mutationer UpdateMutationer) (int, error) {
 	const bufferCount = 1000
 	rows := make([]*spanner.Row, 0, bufferCount)
 
@@ -75,7 +73,7 @@ func (s *SpannerEntityService) UpdateExperiment(ctx context.Context, table strin
 	}
 	defer tx.Close()
 
-	iter := tx.Query(ctx, q)
+	iter := tx.Query(ctx, statement)
 	defer iter.Stop()
 	for {
 		row, err := iter.Next()

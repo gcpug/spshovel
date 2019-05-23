@@ -39,7 +39,10 @@ func TestSpannerEntityService_UpdateExperiment(t *testing.T) {
 	ctx := context.Background()
 	client := shovels.NewClient(ctx, "projects/gcpug-public-spanner/instances/merpay-sponsored-instance/databases/sinmetal")
 	s := shovels.NewSpannerEntityService(client)
-	count, err := s.UpdateExperiment(ctx, TableName, []string{PrimaryKeyName}, `SELECT Id From TweetHashKey WHERE Author != "sinmetal"`, &SampleMutationer{})
+
+	q := spanner.NewStatement(`SELECT Id From TweetHashKey WHERE Author != @Author`)
+	q.Params["Author"] = "sinmetal"
+	count, err := s.UpdateExperiment(ctx, TableName, []string{PrimaryKeyName}, q, &SampleMutationer{})
 	if err != nil {
 		t.Fatal(err)
 	}
