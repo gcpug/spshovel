@@ -18,21 +18,21 @@ var _ shovels.UpdateMutationer = &SampleMutationer{}
 const TableName = "TweetHashKey"
 const PrimaryKeyName = "Id"
 
-func (m *SampleMutationer) GetKey(ctx context.Context, row *spanner.Row) spanner.Key {
+func (m *SampleMutationer) GetKey(ctx context.Context, row *spanner.Row) (spanner.Key, error) {
 	var id string
 	if err := row.ColumnByName(PrimaryKeyName, &id); err != nil {
-		panic(err)
+		return nil, err
 	}
-	return spanner.Key{id}
+	return spanner.Key{id}, nil
 }
 
-func (m *SampleMutationer) GetMutation(ctx context.Context, row *spanner.Row) *spanner.Mutation {
+func (m *SampleMutationer) GetMutation(ctx context.Context, row *spanner.Row) (*spanner.Mutation, error) {
 	var id string
 	if err := row.ColumnByName(PrimaryKeyName, &id); err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return spanner.Update(TableName, []string{PrimaryKeyName, "Author"}, []interface{}{id, "sinmetal"})
+	return spanner.Update(TableName, []string{PrimaryKeyName, "Author"}, []interface{}{id, "sinmetal"}), nil
 }
 
 func TestSpannerEntityService_UpdateExperiment(t *testing.T) {
