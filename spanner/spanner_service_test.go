@@ -39,7 +39,7 @@ func TestSpannerEntityService_UpdateExperiment(t *testing.T) {
 	ctx := context.Background()
 	client := shovels.NewClient(ctx, "projects/gcpug-public-spanner/instances/merpay-sponsored-instance/databases/sinmetal")
 	s := shovels.NewSpannerEntityService(client)
-	count, err := s.UpdateExperiment(ctx, TableName, []string{PrimaryKeyName}, "SELECT Id From TweetHashKey", &SampleMutationer{})
+	count, err := s.UpdateExperiment(ctx, TableName, []string{PrimaryKeyName}, `SELECT Id From TweetHashKey WHERE Author != "sinmetal"`, &SampleMutationer{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,6 +47,8 @@ func TestSpannerEntityService_UpdateExperiment(t *testing.T) {
 }
 
 func TestDataInitialize(t *testing.T) {
+	t.SkipNow()
+
 	ctx := context.Background()
 	client := shovels.NewClient(ctx, "projects/gcpug-public-spanner/instances/merpay-sponsored-instance/databases/sinmetal")
 	var ml []*spanner.Mutation
@@ -60,7 +62,6 @@ func TestDataInitialize(t *testing.T) {
 				t.Fatal(err)
 			}
 			ml = []*spanner.Mutation{}
-			fmt.Printf("INSERT COUNT : %d\n", i)
 		}
 	}
 

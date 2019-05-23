@@ -65,7 +65,8 @@ type UpdateMutationer interface {
 func (s *SpannerEntityService) UpdateExperiment(ctx context.Context, table string, columns []string, sql string, mutationer UpdateMutationer) (int, error) {
 	q := spanner.NewStatement(sql)
 
-	var rows []*spanner.Row
+	const bufferCount = 1000
+	rows := make([]*spanner.Row, 0, bufferCount)
 
 	var count int
 	tx, err := s.sc.BatchReadOnlyTransaction(ctx, spanner.ReadTimestamp(time.Now()))
@@ -87,11 +88,11 @@ func (s *SpannerEntityService) UpdateExperiment(ctx context.Context, table strin
 		count++
 		rows = append(rows, row)
 
-		if count%500 == 0 {
+		if count%bufferCount == 0 {
 			if err := s.update(ctx, table, columns, rows, mutationer); err != nil {
 				return 0, errors.WithStack(err)
 			}
-			rows = []*spanner.Row{}
+			rows = make([]*spanner.Row, 0, bufferCount)
 		}
 	}
 	if len(rows) > 0 {
@@ -104,7 +105,7 @@ func (s *SpannerEntityService) UpdateExperiment(ctx context.Context, table strin
 }
 
 func (s *SpannerEntityService) update(ctx context.Context, table string, columns []string, rows []*spanner.Row, mutationer UpdateMutationer) error {
-	var keys spanner.KeySet
+	keys := spanner.KeySets()
 	for _, v := range rows {
 		key, err := mutationer.GetKey(ctx, v)
 		if err != nil {
@@ -114,11 +115,11 @@ func (s *SpannerEntityService) update(ctx context.Context, table string, columns
 			// TODO 専用のerrorを作る sinmetal
 			return fmt.Errorf("key is required")
 		}
-		keys = append(key)
+		keys = spanner.KeySets(keys, key)
 	}
 
 	_, err := s.sc.ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
-		var ml []*spanner.Mutation
+		ml := make([]*spanner.Mutation, 0, len(rows))
 
 		iter := txn.Read(ctx, table, keys, columns)
 		defer iter.Stop()
