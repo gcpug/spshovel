@@ -1,1 +1,1 @@
-SELECT OrderId, OrderDetailId, ItemId, Price, CommitedAt From OrderDetail1M
+SELECT Id, Author, CreatedAt, UpdatedAt FROM TweetHashKey LIMIT 1000

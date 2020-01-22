@@ -50,6 +50,8 @@ github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5
 github.com/microcosm-cc/bluemonday v1.0.1/go.mod h1:hsXNsILzKxV+sX77C5b8FSuKF00vh2OMYv+xgHpAMF4=
 github.com/minio/minio v0.0.0-20190216002119-b6c00405ec5c h1:csjhUhUbwprAuwFxy7sCm94CvV1s9qY8Y1gM5mpC4jA=
 github.com/minio/minio v0.0.0-20190216002119-b6c00405ec5c/go.mod h1:lXcp05uxYaW99ebgI6ZKIGYU7tqZkM5xSsG0xRt4VIU=
+github.com/morikuni/failure v0.11.0 h1:fLQwvKbFhGYmHankExnKlsKGYbath50lBAujCd4lE7A=
+github.com/morikuni/failure v0.11.0/go.mod h1:+IjvKCz9B/D4BQrTzYLwERdWyMkGJdu+q5gri9dWecg=
 github.com/neelance/astrewrite v0.0.0-20160511093645-99348263ae86/go.mod h1:kHJEU3ofeGjhHklVoIGuVj85JJwZ6kWPaJwCIxgnFmo=
 github.com/neelance/sourcemap v0.0.0-20151028013722-8c68805598ab/go.mod h1:Qr6/a/Q4r9LP1IltGz7tA7iOK1WonHEYhu1HRBA7ZiM=
 github.com/openzipkin/zipkin-go v0.1.1/go.mod h1:NtoC/o8u3JlF1lSlyPNswIbeQH9bJTmOf0Erfk+hxe8=

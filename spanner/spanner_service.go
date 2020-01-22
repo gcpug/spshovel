@@ -7,7 +7,7 @@ import (
 
 	"cloud.google.com/go/spanner"
 	"github.com/gcpug/hake"
-	"github.com/pkg/errors"
+	"github.com/morikuni/failure"
 	"google.golang.org/api/iterator"
 )
 
@@ -19,7 +19,7 @@ func NewSpannerEntityService(sc *spanner.Client) *SpannerEntityService {
 	return &SpannerEntityService{sc}
 }
 
-func (s *SpannerEntityService) QueryToWrite(ctx context.Context, sql string, header bool, w io.Writer) error {
+func (s *SpannerEntityService) QueryDump(ctx context.Context, sql string, header bool, w io.Writer) error {
 	q := spanner.NewStatement(sql)
 
 	cw := csv.NewWriter(w)
@@ -34,11 +34,11 @@ func (s *SpannerEntityService) QueryToWrite(ctx context.Context, sql string, hea
 			break
 		}
 		if err != nil {
-			return errors.WithStack(err)
+			return failure.Wrap(err, failure.WithCode(SpannerInternalError))
 		}
 		count++
 		if err := hw.Write(row); err != nil {
-			return errors.WithStack(err)
+			return failure.Wrap(err, failure.WithCode(HakeInternalError))
 		}
 		if count%1000 == 0 {
 			cw.Flush()
