@@ -7,8 +7,10 @@ import (
 	"os"
 
 	"github.com/gcpug/spshovel/spanner"
-	"github.com/pkg/errors"
+	"github.com/morikuni/failure"
 )
+
+var InvalidArgument failure.StringCode = "InvalidArgument"
 
 type Param struct {
 	Project     string
@@ -55,19 +57,19 @@ func run(ctx context.Context, param *Param, db string, sql string, output string
 	s := spanner.NewSpannerEntityService(sc)
 	fn, f, err := NewCSVFile(output)
 	if err != nil {
-		return "", errors.WithStack(err)
+		return "", failure.Wrap(err)
 	}
 	defer func() {
 		if err := f.Close(); err != nil {
 			if rerr == nil {
-				rerr = errors.WithStack(err)
+				rerr = failure.Wrap(err)
 				return
 			}
 			fmt.Printf("failed file.Close() err=%+v\n", err)
 		}
 	}()
-	if err := s.QueryToWrite(ctx, sql, !param.NoHeader, f); err != nil {
-		return "", errors.WithMessage(err, "failed query to spanner with output file.")
+	if err := s.QueryDump(ctx, sql, !param.NoHeader, f); err != nil {
+		return "", failure.Wrap(err, failure.Message("failed query to spanner with output file."))
 	}
 
 	return fn, nil
@@ -98,7 +100,7 @@ func getFlag() (*Param, error) {
 	}
 
 	if len(emsg) > 0 {
-		return nil, errors.New(emsg)
+		return nil, failure.New(InvalidArgument, failure.Message(emsg))
 	}
 
 	return &Param{
